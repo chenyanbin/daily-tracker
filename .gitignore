@@ -1,0 +1,8 @@
+# 屏蔽git目录
+/.git/
+# wrangler临时缓存
+.wrangler/
+# 系统/IDE垃圾
+.DS_Store
+node_modules/
+.env
