@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="打卡">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <title>日常打卡</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ========== 头部 ========== */
+        .header {
+            text-align: center;
+            padding: 24px 0 8px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* ========== 日期导航 ========== */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 12px;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .date-display {
+            font-size: 18px;
+            font-weight: 600;
+            min-width: 180px;
+            text-align: center;
+            user-select: none;
+        }
+
+        .date-display.is-today {
+            color: var(--primary);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--card);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+
+        .btn-icon:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-today {
+            font-size: 18px;
+        }
+
+        /* ========== 统计栏 ========== */
+        .stats-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: var(--card);
+            padding: 14px 8px;
+            border-radius: var(--radius);
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== 进度条 ========== */
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            border-radius: 3px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        /* ========== 添加任务 ========== */
+        .add-task {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: var(--card);
+        }
+
+        .task-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-add {
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .btn-add:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-add:active {
+            transform: scale(0.97);
+        }
+
+        /* ========== 模板标签 ========== */
+        .templates {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .templates-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-right: 4px;
+        }
+
+        .template-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #eef2ff;
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .template-tag:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .template-tag:active {
+            transform: scale(0.95);
+        }
+
+        /* ========== 任务列表 ========== */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            margin-bottom: 4px;
+        }
+
+        .empty-hint {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        /* ========== 任务项 ========== */
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-item.done {
+            opacity: 0.6;
+        }
+
+        .task-item.done .task-name {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-checkbox {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: transparent;
+        }
+
+        .task-checkbox:hover {
+            border-color: var(--success);
+        }
+
+        .task-item.done .task-checkbox {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .task-name {
+            flex: 1;
+            font-size: 16px;
+            word-break: break-all;
+        }
+
+        .task-delete {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .task-delete:hover {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+
+        /* ========== 底部操作 ========== */
+        .footer-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            padding-bottom: 32px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 10px 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ========== Toast ========== */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            z-index: 1000;
+            animation: fadeInOut 2s ease forwards;
+            pointer-events: none;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            75% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            .date-display {
+                font-size: 16px;
+                min-width: 140px;
+            }
+            .task-input {
+                font-size: 14px;
+            }
+            .btn-add {
+                font-size: 14px;
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>📋 日常打卡</h1>
+            <p class="subtitle">记录每一天，见证每一刻</p>
+        </header>
+
+        <!-- 日期导航 -->
+        <div class="date-nav">
+            <button class="btn-icon" id="prevDay" title="前一天">◀</button>
+            <div class="date-display" id="dateDisplay"></div>
+            <button class="btn-icon" id="nextDay" title="后一天">▶</button>
+            <button class="btn-icon btn-today" id="btnToday" title="回到今天">📅</button>
+        </div>
+
+        <!-- 今日统计 -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item">
+                <span class="stat-number" id="totalCount">0</span>
+                <span class="stat-label">总计</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="doneCount">0</span>
+                <span class="stat-label">已完成</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="percentText">0%</span>
+                <span class="stat-label">完成率</span>
+            </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- 添加任务 -->
+        <div class="add-task">
+            <input
+                type="text"
+                id="taskInput"
+                class="task-input"
+                placeholder="添加新的日常事项..."
+                autocomplete="off"
+            />
+            <button class="btn-add" id="btnAdd">＋ 添加</button>
+        </div>
+
+        <!-- 预设模板 -->
+        <div class="templates" id="templates">
+            <span class="templates-label">快速添加：</span>
+            <span class="template-tag" data-name="早起">🌅 早起</span>
+            <span class="template-tag" data-name="读书">📖 读书</span>
+            <span class="template-tag" data-name="运动">🏃 运动</span>
+            <span class="template-tag" data-name="冥想">🧘 冥想</span>
+            <span class="template-tag" data-name="喝水">💧 喝8杯水</span>
+            <span class="template-tag" data-name="早睡">🌙 早睡</span>
+        </div>
+
+        <!-- 任务列表 -->
+        <div class="task-list" id="taskList">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📝</div>
+                <p>还没有添加事项</p>
+                <p class="empty-hint">点击上方标签或输入框添加</p>
+            </div>
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="footer-actions">
+            <button class="btn-secondary" id="btnClearDay">🗑 清空当天记录</button>
+            <button class="btn-secondary" id="btnExport">📤 导出数据</button>
+            <button class="btn-secondary" id="btnImport">📥 导入数据</button>
+            <input type="file" id="importFile" accept=".json" style="display:none">
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 日常打卡 - H5 应用
+         * 功能：记录每日事项，支持标记完成、日期切换、导入导出
+         * 数据存储在 localStorage
+         */
+
+        const STORAGE_KEY = 'daily-tracker-data';
+
+        // ========== 数据层 ==========
+        function loadData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch {
+                return {};
+            }
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function getDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function getTodayKey() {
+            return getDateKey(new Date());
+        }
+
+        function getTasks(dateKey) {
+            const data = loadData();
+            return data[dateKey] || [];
+        }
+
+        function setTasks(dateKey, tasks) {
+            const data = loadData();
+            data[dateKey] = tasks;
+            saveData(data);
+        }
+
+        // ========== 状态 ==========
+        let currentDate = new Date();
+        let currentDateKey = getDateKey(currentDate);
+        let currentTasks = getTasks(currentDateKey);
+
+        // ========== DOM 引用 ==========
+        const dateDisplay = document.getElementById('dateDisplay');
+        const taskList = document.getElementById('taskList');
+        const taskInput = document.getElementById('taskInput');
+        const emptyState = document.getElementById('emptyState');
+        const progressFill = document.getElementById('progressFill');
+        const totalCount = document.getElementById('totalCount');
+        const doneCount = document.getElementById('doneCount');
+        const percentText = document.getElementById('percentText');
+
+        // ========== 工具函数 ==========
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekDay = weekDays[date.getDay()];
+            return `${year}年${month}月${day}日 星期${weekDay}`;
+        }
+
+        function isToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        // ========== 渲染 ==========
+        function render() {
+            renderDate();
+            renderStats();
+            renderTasks();
+        }
+
+        function renderDate() {
+            dateDisplay.textContent = formatDate(currentDate);
+            if (isToday(currentDate)) {
+                dateDisplay.classList.add('is-today');
+                dateDisplay.textContent = '📍 今天 · ' + formatDate(currentDate);
+            } else {
+                dateDisplay.classList.remove('is-today');
+            }
+        }
+
+        function renderStats() {
+            const total = currentTasks.length;
+            const done = currentTasks.filter(t => t.done).length;
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+            totalCount.textContent = total;
+            doneCount.textContent = done;
+            percentText.textContent = percent + '%';
+            progressFill.style.width = percent + '%';
+        }
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+
+            if (currentTasks.length === 0) {
+                taskList.appendChild(emptyState);
+                emptyState.style.display = '';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // 未完成的排前面，完成的排后面
+            const sorted = [...currentTasks].sort((a, b) => {
+                if (a.done === b.done) return b.createdAt - a.createdAt;
+                return a.done ? 1 : -1;
+            });
+
+            sorted.forEach(task => {
+                const el = document.createElement('div');
+                el.className = 'task-item' + (task.done ? ' done' : '');
+                el.innerHTML = `
+                    <div class="task-checkbox" data-id="${task.id}">${task.done ? '✓' : ''}</div>
+                    <span class="task-name">${escapeHtml(task.name)}</span>
+                    <button class="task-delete" data-id="${task.id}" title="删除">×</button>
+                `;
+                taskList.appendChild(el);
+            });
+
+            // 绑定事件
+            taskList.querySelectorAll('.task-checkbox').forEach(cb => {
+                cb.addEventListener('click', () => toggleTask(cb.dataset.id));
+            });
+            taskList.querySelectorAll('.task-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteTask(btn.dataset.id);
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== 操作 ==========
+        function addTask(name) {
+            const trimmed = name.trim();
+            if (!trimmed) return;
+
+            // 去重检查
+            if (currentTasks.some(t => t.name === trimmed)) {
+                showToast('⚠️ 该事项已存在');
+                return;
+            }
+
+            const task = {
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                name: trimmed,
+                done: false,
+                createdAt: Date.now(),
+            };
+
+            currentTasks.push(task);
+            setTasks(currentDateKey, currentTasks);
+            render();
+            taskInput.value = '';
+            taskInput.focus();
+        }
+
+        function toggleTask(id) {
+            const task = currentTasks.find(t => t.id === id);
+            if (!task) return;
+
+            task.done = !task.done;
+            setTasks(currentDateKey, currentTasks);
+            render();
+        }
+
+        function deleteTask(id) {
+            if (!confirm('确定删除这个事项吗？')) return;
+            currentTasks = currentTasks.filter(t => t.id !== id);
+            setTasks(currentDateKey, currentTasks);
+            render();
+        }
+
+        function clearDay() {
+            if (currentTasks.length === 0) {
+                showToast('当天没有记录');
+                return;
+            }
+            if (!confirm(`确定清空 ${formatDate(currentDate)} 的所有记录吗？此操作不可恢复。`)) return;
+            currentTasks = [];
+            setTasks(currentDateKey, currentTasks);
+            render();
+            showToast('已清空');
+        }
+
+        function navigateDate(delta) {
+            currentDate.setDate(currentDate.getDate() + delta);
+            currentDateKey = getDateKey(currentDate);
+            currentTasks = getTasks(currentDateKey);
+            render();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            currentDateKey = getDateKey(currentDate);
+            currentTasks = getTasks(currentDateKey);
+            render();
+        }
+
+        // ========== 导入导出 ==========
+        function exportData() {
+            const data = loadData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `daily-tracker-backup-${getTodayKey()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ 导出成功');
+        }
+
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (typeof imported !== 'object' || Array.isArray(imported)) {
+                        throw new Error('格式错误');
+                    }
+                    // 合并数据（导入的数据覆盖已有数据）
+                    const existing = loadData();
+                    const merged = { ...existing, ...imported };
+                    saveData(merged);
+                    currentTasks = getTasks(currentDateKey);
+                    render();
+                    showToast('✅ 导入成功');
+                } catch {
+                    showToast('❌ 文件格式错误');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ========== 事件绑定 ==========
+        document.getElementById('btnAdd').addEventListener('click', () => {
+            addTask(taskInput.value);
+        });
+
+        taskInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                addTask(taskInput.value);
+            }
+        });
+
+        document.getElementById('prevDay').addEventListener('click', () => navigateDate(-1));
+        document.getElementById('nextDay').addEventListener('click', () => navigateDate(1));
+        document.getElementById('btnToday').addEventListener('click', () => goToToday());
+        document.getElementById('btnClearDay').addEventListener('click', () => clearDay());
+        document.getElementById('btnExport').addEventListener('click', () => exportData());
+
+        document.getElementById('btnImport').addEventListener('click', () => {
+            document.getElementById('importFile').click();
+        });
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                importData(e.target.files[0]);
+                e.target.value = '';
+            }
+        });
+
+        // 模板标签点击
+        document.querySelectorAll('.template-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                addTask(tag.dataset.name);
+            });
+        });
+
+        // 键盘快捷键：左右箭头切换日期
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return; // 不在输入框中
+            if (e.key === 'ArrowLeft') navigateDate(-1);
+            if (e.key === 'ArrowRight') navigateDate(1);
+            if (e.key === 't' || e.key === 'T') goToToday();
+        });
+
+        // ========== 初始化 ==========
+        render();
+        taskInput.focus();
+
+        // ========== Service Worker 注册（离线支持） ==========
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {
+                    // 注册失败静默处理，不影响主功能
+                });
+            });
+        }
+    </script>
+</body>
+</html>
